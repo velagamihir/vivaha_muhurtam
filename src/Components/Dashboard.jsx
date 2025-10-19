@@ -1,4 +1,3 @@
-// src/Components/Dashboard.jsx
 import React, { useEffect, useState } from "react";
 import { auth, signOut } from "../firebase";
 import { useNavigate } from "react-router-dom";
@@ -10,11 +9,20 @@ import Vendors from "./Vendors";
 import Countdown from "./Countdown";
 import Guests from "./Guests";
 import { supabase } from "../Supabase";
+import { Menu } from "lucide-react"; // Hamburger icon
+
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("Profile");
-  const navigate = useNavigate();
   const [wedding, setWedding] = useState({});
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return navigate("/");
+    setUser(currentUser);
+  }, [navigate]);
 
   useEffect(() => {
     const fetchWedding = async () => {
@@ -28,18 +36,14 @@ const Dashboard = () => {
     if (user) fetchWedding();
   }, [user]);
 
-  useEffect(() => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) return navigate("/");
-    setUser(currentUser);
-  }, [navigate]);
-
   const handleLogout = async () => {
     await signOut(auth);
     navigate("/");
   };
 
   if (!user) return null;
+
+  const tabs = ["Profile", "Wedding", "Budget", "Tasks", "Vendors", "Countdown", "Guests"];
 
   const renderTab = () => {
     switch (activeTab) {
@@ -63,24 +67,31 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-rose-50">
+    <div className="flex min-h-screen bg-rose-50 relative">
+      {/* Hamburger for mobile */}
+      <button
+        className="sm:hidden absolute top-4 left-4 z-20 p-2 bg-pink-500 text-white rounded-md"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+      >
+        <Menu size={20} />
+      </button>
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-lg flex flex-col p-6 space-y-6">
+      <aside
+        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg flex flex-col p-6 space-y-6 transform transition-transform duration-300 z-10
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} sm:translate-x-0 sm:relative sm:flex`}
+      >
         <h1 className="text-2xl font-bold text-pink-600 text-center mb-6">
           Vivaha Muhurtam
         </h1>
-        {[
-          "Profile",
-          "Wedding",
-          "Budget",
-          "Tasks",
-          "Vendors",
-          "Countdown",
-          "Guests",
-        ].map((tab) => (
+
+        {tabs.map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              setActiveTab(tab);
+              setSidebarOpen(false); // close on mobile
+            }}
             className={`text-left px-4 py-2 rounded-lg transition ${
               activeTab === tab
                 ? "bg-pink-100 font-semibold text-pink-700"
@@ -90,6 +101,7 @@ const Dashboard = () => {
             {tab}
           </button>
         ))}
+
         <button
           onClick={handleLogout}
           className="mt-auto bg-pink-500 hover:bg-pink-600 text-white py-2 px-4 rounded-full transition"
@@ -98,10 +110,16 @@ const Dashboard = () => {
         </button>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto space-y-6">
-        {renderTab()}
-      </main>
+      {/* Overlay for mobile when sidebar is open */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 z-5 sm:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Main content */}
+      <main className="flex-1 p-4 sm:p-8 overflow-y-auto">{renderTab()}</main>
     </div>
   );
 };

@@ -15,7 +15,6 @@ const Budget = ({ user }) => {
   const [newCategory, setNewCategory] = useState("");
   const [newBudget, setNewBudget] = useState({ category_id: "", amount: 0 });
 
-  // Fetch categories from Supabase
   const fetchCategories = async () => {
     const { data, error } = await supabase
       .from("budget_categories")
@@ -24,7 +23,6 @@ const Budget = ({ user }) => {
 
     if (error) console.error("Error fetching categories:", error);
     else {
-      // If no categories exist, insert sample categories
       if (!data || data.length === 0) {
         sampleCategories.forEach(async (cat) => {
           await supabase.from("budget_categories").insert({
@@ -32,7 +30,7 @@ const Budget = ({ user }) => {
             user_id: user.uid,
           });
         });
-        fetchCategories(); // refetch after inserting samples
+        fetchCategories();
       } else {
         setCategories(data);
       }
@@ -43,22 +41,20 @@ const Budget = ({ user }) => {
     if (user) fetchCategories();
   }, [user]);
 
-  // Add new category
   const addCategory = async () => {
     if (!newCategory) return;
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("budget_categories")
       .insert({ name: newCategory, allocated: 0, spent: 0, user_id: user.uid });
 
     if (error) console.error("Error adding category:", error);
     else {
       setNewCategory("");
-      fetchCategories(); // refresh list
+      fetchCategories();
     }
   };
 
-  // Update allocated amount
   const saveCategory = async (cat) => {
     const { error } = await supabase
       .from("budget_categories")
@@ -71,7 +67,6 @@ const Budget = ({ user }) => {
     setEditing({});
   };
 
-  // Add budget item
   const addBudgetItem = async () => {
     if (!newBudget.category_id || newBudget.amount <= 0) return;
 
@@ -83,9 +78,9 @@ const Budget = ({ user }) => {
 
     if (insertError) console.error("Error adding budget item:", insertError);
 
-    // Update spent in category
     const cat = categories.find((c) => c.id === newBudget.category_id);
     const updatedSpent = (cat.spent || 0) + Number(newBudget.amount);
+
     const { error: updateError } = await supabase
       .from("budget_categories")
       .update({ spent: updatedSpent })
@@ -99,13 +94,15 @@ const Budget = ({ user }) => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-pink-600 mb-6">Budget Overview</h2>
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+      <h2 className="text-2xl sm:text-3xl font-bold text-pink-600 mb-6 text-center sm:text-left">
+        Budget Overview
+      </h2>
 
-      {/* Add new category */}
+      {/* Add New Category */}
       <div className="bg-white rounded-3xl shadow-lg p-4 mb-6">
         <h3 className="font-semibold text-pink-600 mb-2">Add New Category</h3>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             placeholder="Category Name"
@@ -123,7 +120,7 @@ const Budget = ({ user }) => {
       </div>
 
       {/* Existing Categories */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {categories.map((cat) => (
           <div key={cat.id} className="bg-white rounded-3xl shadow-lg p-4">
             {editing[cat.id] ? (
@@ -159,7 +156,7 @@ const Budget = ({ user }) => {
                   }
                   className="w-full border px-2 py-1 rounded-lg"
                 />
-                <div className="flex gap-2 mt-2">
+                <div className="flex flex-col sm:flex-row gap-2 mt-2">
                   <button
                     onClick={() => saveCategory(editing[cat.id])}
                     className="bg-pink-500 text-white px-3 py-1 rounded-lg hover:bg-pink-600"
@@ -228,7 +225,7 @@ const Budget = ({ user }) => {
 
         <button
           onClick={addBudgetItem}
-          className="bg-pink-500 text-white px-4 py-2 rounded-full hover:bg-pink-600"
+          className="bg-pink-500 text-white px-4 py-2 rounded-full hover:bg-pink-600 w-full"
         >
           Add
         </button>
