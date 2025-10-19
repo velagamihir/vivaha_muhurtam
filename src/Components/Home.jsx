@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useEffect } from "react";
 import { auth, provider } from "../firebase";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
@@ -56,23 +56,6 @@ const Home = () => {
     if (error) console.error("Failed to save user:", error.message);
     else console.log("User saved successfully in Supabase");
   };
-
-  // Check redirect result (after mobile redirect login)
-  useEffect(() => {
-    const checkRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          const user = result.user;
-          await saveUserToSupabase(user);
-          navigate("/dashboard");
-        }
-      } catch (error) {
-        console.error("Redirect login failed:", error);
-      }
-    };
-    checkRedirectResult();
-  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-100 via-pink-100 to-yellow-50 flex flex-col items-center justify-center p-6">
