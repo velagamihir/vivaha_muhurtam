@@ -1,32 +1,43 @@
 import React, { useEffect } from "react";
 import { auth, provider } from "../firebase";
-import {
-  signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
-} from "firebase/auth";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import "../output.css";
 import { supabase } from "../Supabase";
 
 const Home = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   // Handle Google login
   const handleGoogleLogin = async () => {
+    setLoading(true);
+    const provider = new GoogleAuthProvider();
+
     try {
-      if (/Mobi|Android/i.test(navigator.userAgent)) {
-        // Mobile device → use redirect
-        await signInWithRedirect(auth, provider);
-      } else {
-        // Desktop → use popup
-        const result = await signInWithPopup(auth, provider);
-        const user = auth.currentUser;
-        await saveUserToSupabase(user);
-        navigate("/dashboard");
-      }
+      // Open the Google sign-in popup
+      const result = await signInWithPopup(auth, provider);
+
+      // Login successful!
+      const user = result.user;
+      console.log("Firebase Google Login Successful! User:", user);
+
+      await saveUserToSupabase(user);
+      navigate("/dashboard", {
+        replace: true,
+      });
     } catch (error) {
-      console.error("Login failed:", error);
+      // Handle Errors here.
+      const errorCode = error.code;
+      const errorMessage = error.message;
+
+      console.error("Firebase Google Login Failed:", errorCode, errorMessage);
+
+      // 🌟 Better error handling (using state or a toast library is ideal,
+      // but sticking with alert for minimal change)
+      alert(`Login failed (${errorCode}): ${errorMessage}.`);
+    } finally {
+      setLoading(false);
     }
   };
 
