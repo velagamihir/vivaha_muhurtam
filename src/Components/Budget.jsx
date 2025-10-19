@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../Supabase";
 
-const sampleCategories = [
-  { name: "Venue", allocated: 100000, spent: 0 },
-  { name: "Catering", allocated: 50000, spent: 0 },
-  { name: "Decoration", allocated: 30000, spent: 0 },
-  { name: "Photography", allocated: 20000, spent: 0 },
-  { name: "Clothing & Jewelry", allocated: 40000, spent: 0 },
-];
-
 const Budget = ({ user }) => {
   const [categories, setCategories] = useState([]);
   const [editing, setEditing] = useState({});
@@ -23,17 +15,7 @@ const Budget = ({ user }) => {
 
     if (error) console.error("Error fetching categories:", error);
     else {
-      if (!data || data.length === 0) {
-        sampleCategories.forEach(async (cat) => {
-          await supabase.from("budget_categories").insert({
-            ...cat,
-            user_id: user.uid,
-          });
-        });
-        fetchCategories();
-      } else {
-        setCategories(data);
-      }
+      setCategories(data || []);
     }
   };
 
